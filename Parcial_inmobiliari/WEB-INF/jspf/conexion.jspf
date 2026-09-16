@@ -1,0 +1,40 @@
+<%@ page import="java.sql.*" %>
+<%!
+    // Bandera de entorno: false = Local (XAMPP), true = Remoto (Clever Cloud)
+    private static final boolean USAR_NUBE = false;
+
+    // Configuración Local (XAMPP)
+    private static final String DB_HOST_LOCAL = "localhost";
+    private static final String DB_PORT_LOCAL = "3306";
+    private static final String DB_NAME_LOCAL = "db_inmobiliaria";
+    private static final String DB_USER_LOCAL = "root";
+    private static final String DB_PASS_LOCAL = "";
+
+    // Configuración Remota (Clever Cloud)
+    private static final String DB_HOST_NUBE  = "ber3s5svknzmbdgnmo73-mysql.services.clever-cloud.com";
+    private static final String DB_PORT_NUBE  = "3306";
+    private static final String DB_NAME_NUBE  = "ber3s5svknzmbdgnmo73";
+    private static final String DB_USER_NUBE  = "uoq2jfpmej2oumnk";
+    private static final String DB_PASS_NUBE  = "xwinXFkaYdrlwGsCZvJh";
+
+    public Connection obtenerConexion() {
+        Connection conn = null;
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            
+            String host = USAR_NUBE ? DB_HOST_NUBE : DB_HOST_LOCAL;
+            String port = USAR_NUBE ? DB_PORT_NUBE : DB_PORT_LOCAL;
+            String db   = USAR_NUBE ? DB_NAME_NUBE : DB_NAME_LOCAL;
+            String user = USAR_NUBE ? DB_USER_NUBE : DB_USER_LOCAL;
+            String pass = USAR_NUBE ? DB_PASS_NUBE : DB_PASS_LOCAL;
+
+            String url = "jdbc:mysql://" + host + ":" + port + "/" + db + 
+                         "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+
+            conn = DriverManager.getConnection(url, user, pass);
+        } catch (Exception e) {
+            // Error silencioso en la declaración para evitar conflictos de compilación en Tomcat
+        }
+        return conn;
+    }
+%>

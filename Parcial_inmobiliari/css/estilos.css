@@ -1,0 +1,560 @@
+/* =========================================================
+   NEXO INMOBILIARIA — Sistema de diseño
+   Paleta: azul noche + oro sobre fondo claro, a juego con el
+   logo. Tipografía: Space Grotesk (titulares) + Inter (texto).
+   Animaciones en cada rincón.
+   ========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    /* Paleta */
+    --ink:            #0F1B2E;   /* texto principal / azul noche del logo */
+    --navy:           #16213E;   /* azul noche -- color de marca */
+    --navy-dark:      #0A1120;
+    --navy-light:     #2A3A5C;
+    --gold:           #C9A24E;   /* oro cálido -- acento de marca */
+    --gold-light:     #E8C878;
+    --gold-dark:      #A6812F;
+    --teal:           #2DD4BF;   /* acento vivo para detalles/foco */
+    --paper:          #F6F4EE;   /* fondo general, crema suave */
+    --paper-card:     #FFFFFF;
+    --stone:          #6B7280;
+    --line:           #E7E2D3;
+
+    --gradient-brand: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 50%, var(--gold-light) 100%);
+    --gradient-dark:  linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 55%, var(--navy-light) 100%);
+    --gradient-gold-text: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+
+    --font-display: 'Space Grotesk', 'Segoe UI', sans-serif;
+    --font-body: 'Inter', 'Segoe UI', sans-serif;
+
+    --radius-sm: 10px;
+    --radius-md: 18px;
+    --radius-lg: 28px;
+
+    --shadow-glow: 0 10px 28px rgba(201, 162, 78, 0.35);
+    --shadow-glow-navy: 0 10px 28px rgba(22, 33, 62, 0.25);
+}
+
+/* ---------- Base ---------- */
+body {
+    background-color: var(--paper);
+    background-image:
+        radial-gradient(circle at 8% 0%, rgba(201, 162, 78, 0.10), transparent 42%),
+        radial-gradient(circle at 92% 8%, rgba(22, 33, 62, 0.06), transparent 40%);
+    background-attachment: fixed;
+    font-family: var(--font-body);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+}
+
+body > .container {
+    flex: 1 0 auto;
+    animation: fadeInUp 0.6s ease both;
+}
+
+h1, h2, h3, h4, h5, .display-5 {
+    font-family: var(--font-display);
+    color: var(--ink);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+a { color: var(--navy); transition: color 0.2s ease; }
+a:hover { color: var(--gold-dark); }
+
+::selection {
+    background: var(--gold-light);
+    color: var(--ink);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes floatY {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-14px); }
+}
+@keyframes gradientShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+@keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(201, 162, 78, 0.45); }
+    50%      { box-shadow: 0 0 0 10px rgba(201, 162, 78, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+}
+
+/* ---------- Barra de navegación (clara, para lucir el logo) ---------- */
+.navbar.bg-dark {
+    background: rgba(255, 255, 255, 0.82) !important;
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border-bottom: 1px solid rgba(201, 162, 78, 0.35);
+    box-shadow: 0 4px 26px rgba(15, 27, 46, 0.08);
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    padding: 0.15rem 0;
+}
+.navbar-brand .brand-logo {
+    height: 44px;
+    width: auto;
+    display: block;
+    transition: transform 0.25s ease;
+}
+.navbar-brand:hover .brand-logo {
+    transform: scale(1.04);
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: var(--ink);
+    font-weight: 600;
+    position: relative;
+    transition: color 0.2s ease;
+}
+.navbar-dark .navbar-nav .nav-link::after {
+    content: "";
+    position: absolute;
+    left: 0; bottom: -4px;
+    width: 0;
+    height: 2px;
+    background: var(--gradient-brand);
+    transition: width 0.25s ease;
+    border-radius: 2px;
+}
+.navbar-dark .navbar-nav .nav-link:hover,
+.navbar-dark .navbar-nav .nav-link.active {
+    color: var(--gold-dark);
+}
+.navbar-dark .navbar-nav .nav-link:hover::after,
+.navbar-dark .navbar-nav .nav-link.active::after {
+    width: 100%;
+}
+
+.navbar .btn-outline-primary {
+    color: var(--navy);
+    border-color: var(--navy);
+    font-weight: 600;
+}
+.navbar .btn-outline-primary:hover {
+    background: var(--gradient-dark);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: var(--shadow-glow-navy);
+    transform: translateY(-1px);
+}
+
+.dropdown-menu {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 18px 40px rgba(15, 27, 46, 0.16);
+    padding: 0.5rem;
+    animation: fadeInUp 0.18s ease both;
+}
+.dropdown-item {
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 0.9rem;
+    font-weight: 500;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+.dropdown-item:hover {
+    background: linear-gradient(135deg, rgba(201,162,78,0.14), rgba(22,33,62,0.06));
+    color: var(--navy);
+    transform: translateX(2px);
+}
+.dropdown-item.text-danger:hover { background-color: #FFE4E9; }
+
+/* ---------- Hero / portada ---------- */
+.hero-banner {
+    position: relative;
+    background: var(--gradient-dark);
+    background-size: 220% 220%;
+    animation: gradientShift 12s ease infinite;
+    color: #fff;
+    border-radius: var(--radius-lg);
+    padding: 4.5rem 2.5rem;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+.hero-banner::before {
+    content: "";
+    position: absolute;
+    inset: -20%;
+    background:
+        radial-gradient(circle at 15% 25%, rgba(201, 162, 78, 0.35), transparent 40%),
+        radial-gradient(circle at 85% 15%, rgba(45, 212, 191, 0.22), transparent 38%),
+        radial-gradient(circle at 75% 90%, rgba(201, 162, 78, 0.22), transparent 42%);
+    animation: floatY 9s ease-in-out infinite;
+    z-index: -1;
+}
+
+.hero-banner::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 34px 34px;
+    mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+    pointer-events: none;
+}
+
+.hero-banner .hero-eyebrow {
+    display: inline-block;
+    color: var(--ink);
+    background: var(--gradient-brand);
+    padding: 0.3rem 0.9rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.02em;
+    margin-bottom: 1rem;
+    animation: pulseGlow 2.4s ease-in-out infinite;
+}
+
+.hero-banner h1 {
+    color: #fff;
+    font-size: clamp(2.2rem, 4.2vw, 3.4rem);
+    line-height: 1.1;
+    max-width: 18ch;
+    text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+}
+
+.hero-banner p {
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 1.15rem;
+    max-width: 46ch;
+}
+
+/* ---------- Tarjeta de filtros ---------- */
+.filter-card {
+    background-color: var(--paper-card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    box-shadow: 0 18px 45px rgba(15, 27, 46, 0.10);
+    margin-top: -3rem;
+    position: relative;
+    z-index: 2;
+    animation: fadeInUp 0.5s ease 0.1s both;
+}
+
+.filter-card .form-label {
+    color: var(--stone);
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.filter-card .form-select,
+.filter-card .form-control {
+    border-color: var(--line);
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 0.9rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+.filter-card .form-select:focus,
+.filter-card .form-control:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 0.2rem rgba(201, 162, 78, 0.18);
+    transform: translateY(-1px);
+}
+
+.btn-primary {
+    background: var(--gradient-brand);
+    background-size: 200% auto;
+    border: none;
+    color: var(--ink);
+    font-weight: 700;
+    box-shadow: var(--shadow-glow);
+    transition: background-position 0.4s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-primary:hover,
+.btn-primary:focus {
+    background-position: right center;
+    color: var(--ink);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 28px rgba(201, 162, 78, 0.5);
+}
+.btn-primary:active { transform: translateY(0) scale(0.98); }
+
+.btn-outline-primary {
+    color: var(--navy);
+    border-color: var(--navy);
+    border-width: 2px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+.btn-outline-primary:hover {
+    background: var(--gradient-dark);
+    border-color: transparent;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow-navy);
+}
+
+.btn-outline-secondary {
+    color: var(--stone);
+    border-color: var(--line);
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+.btn-outline-secondary:hover {
+    background-color: var(--paper);
+    color: var(--navy);
+    border-color: var(--gold);
+    transform: translateY(-1px);
+}
+
+.btn-outline-danger {
+    transition: all 0.2s ease;
+}
+.btn-outline-danger:hover {
+    transform: translateY(-1px) scale(1.04);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #10B981, var(--teal));
+    border: none;
+    font-weight: 700;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-success:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 26px rgba(16, 185, 129, 0.4);
+}
+
+/* ---------- Catálogo / tarjetas de propiedad ---------- */
+.catalog-header h2 {
+    font-size: 2rem;
+    background: var(--gradient-gold-text);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+}
+.catalog-header p { color: var(--stone); }
+
+.property-card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background-color: var(--paper-card);
+    transition: transform 0.28s cubic-bezier(.2,.8,.2,1), box-shadow 0.28s ease, border-color 0.28s ease;
+    animation: fadeInUp 0.5s ease both;
+    position: relative;
+}
+.property-card:hover {
+    transform: translateY(-10px) scale(1.015);
+    box-shadow: 0 24px 48px rgba(15, 27, 46, 0.18) !important;
+    border-color: var(--gold);
+}
+
+.property-card .card-img-top {
+    height: 220px;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+.property-card:hover .card-img-top {
+    transform: scale(1.08);
+}
+
+.property-card .fav-toggle {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 3;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 6px 16px rgba(15, 27, 46, 0.2);
+    color: var(--navy);
+    font-size: 1.1rem;
+    transition: transform 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+.property-card .fav-toggle:hover {
+    transform: scale(1.12);
+    color: #E11D48;
+}
+.property-card .fav-toggle.is-fav {
+    color: #E11D48;
+    background: #fff;
+}
+
+.property-card .badge {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 0.72rem;
+    padding: 0.45em 0.8em;
+    border-radius: 999px;
+    letter-spacing: 0.02em;
+}
+.property-card .badge.bg-info {
+    background: linear-gradient(135deg, var(--navy), var(--navy-light)) !important;
+    color: #fff !important;
+}
+.property-card .badge.bg-secondary {
+    background-color: var(--paper) !important;
+    color: var(--stone) !important;
+    border: 1px solid var(--line);
+}
+.property-card .badge.bg-success {
+    background: linear-gradient(135deg, #10B981, var(--teal)) !important;
+}
+
+.property-card .card-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.18rem;
+    margin-top: 0.4rem;
+}
+
+.property-card .price {
+    font-family: var(--font-display);
+    background: var(--gradient-gold-text);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+    font-size: 1.4rem;
+}
+
+.property-card .card-footer { background-color: var(--paper-card); border-top: 1px solid var(--line); }
+.property-card .card-footer .btn { border-radius: var(--radius-sm); }
+
+/* ---------- Formularios de sesión (login / registro) ---------- */
+.card-header.bg-primary {
+    background: var(--gradient-dark) !important;
+    border: none;
+}
+
+.auth-card {
+    border: none;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: 0 30px 70px rgba(15, 27, 46, 0.22);
+    animation: fadeInUp 0.5s ease both;
+}
+.auth-card::before {
+    content: "";
+    display: block;
+    height: 6px;
+    background: var(--gradient-brand);
+    background-size: 200% auto;
+    animation: gradientShift 4s ease infinite;
+}
+.auth-logo {
+    height: 56px;
+    width: auto;
+}
+
+/* ---------- Tablas / paneles admin ---------- */
+.table-responsive {
+    background-color: var(--paper-card);
+    border-radius: var(--radius-md);
+    padding: 15px;
+    box-shadow: 0 8px 26px rgba(15, 27, 46, 0.08);
+}
+.table th {
+    background-color: var(--paper);
+    color: var(--navy);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.78rem;
+    letter-spacing: 0.03em;
+}
+.table tbody tr {
+    transition: background-color 0.15s ease;
+}
+.table tbody tr:hover {
+    background-color: rgba(201, 162, 78, 0.08);
+}
+
+/* ---------- Carrusel ficha de detalle ---------- */
+.carousel-item img { border-radius: var(--radius-md); }
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    background-color: rgba(15, 27, 46, 0.6);
+    border-radius: 50%;
+    padding: 1.3rem;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+.carousel-control-prev:hover .carousel-control-prev-icon,
+.carousel-control-next:hover .carousel-control-next-icon {
+    background-color: var(--gold-dark);
+    transform: scale(1.1);
+}
+
+/* ---------- Pie de página ---------- */
+footer.bg-dark {
+    background: var(--gradient-dark) !important;
+    background-size: 220% 220%;
+    animation: gradientShift 14s ease infinite;
+    color: rgba(255, 255, 255, 0.8) !important;
+    position: relative;
+}
+
+/* ---------- Utilidades ---------- */
+.card, .alert, .list-group-item {
+    transition: box-shadow 0.2s ease;
+}
+
+/* ---------- Corrección de contraste ----------
+   Los títulos (h1-h5) tienen color: var(--ink) fijado más arriba en
+   esta hoja. Ese color se aplica DIRECTO sobre el elemento, así que
+   NO se sobrescribe solo por poner .text-white en el contenedor padre
+   (la herencia de color no pisa una declaración explícita en el hijo).
+   Resultado: títulos casi invisibles dentro de tarjetas/cabeceras
+   oscuras (bg-primary, bg-dark, bg-success, footer, etc.).
+   Se fuerza aquí el color correcto según el fondo, con selectores más
+   específicos para ganarle a la regla general de h1-h5. */
+.text-white h1, .text-white h2, .text-white h3,
+.text-white h4, .text-white h5, .text-white h6,
+.bg-primary h1, .bg-primary h2, .bg-primary h3,
+.bg-primary h4, .bg-primary h5, .bg-primary h6,
+.bg-dark h1, .bg-dark h2, .bg-dark h3,
+.bg-dark h4, .bg-dark h5, .bg-dark h6,
+.bg-success h1, .bg-success h2, .bg-success h3,
+.bg-success h4, .bg-success h5, .bg-success h6,
+.bg-danger h1, .bg-danger h2, .bg-danger h3,
+.bg-danger h4, .bg-danger h5, .bg-danger h6,
+footer h1, footer h2, footer h3, footer h4, footer h5, footer h6,
+.hero-banner p, .hero-banner span {
+    color: #fff !important;
+}
+
+/* bg-warning / bg-info son fondos claros: los títulos deben quedar
+   oscuros, no blancos (si algún día alguien les pone .text-white por
+   error, o si heredan mal el color). */
+.bg-warning h1, .bg-warning h2, .bg-warning h3,
+.bg-warning h4, .bg-warning h5, .bg-warning h6,
+.bg-info h1, .bg-info h2, .bg-info h3,
+.bg-info h4, .bg-info h5, .bg-info h6 {
+    color: var(--ink) !important;
+}

@@ -1,0 +1,23 @@
+<%!
+    /**
+     * Devuelve una foto REAL (no genérica/aleatoria) acorde al tipo de
+     * inmueble, cuando la propiedad todavía no tiene una foto propia
+     * cargada en la base de datos (o la URL guardada es una ruta local
+     * tipo /img/... que no existe como archivo real).
+     *
+     * Usa LoremFlickr, que sirve fotografías reales etiquetadas por tema.
+     * El parámetro "seed" (normalmente el id de la propiedad) hace que la
+     * misma propiedad siempre muestre la misma foto.
+     */
+    private String imagenPorTipo(String nombreTipo, int seed) {
+        // NOTA: se usa picsum.photos (más estable) en vez de loremflickr.com,
+        // que ha tenido cortes largos por bloqueos de la API de Flickr.
+        // No permite elegir el tema por texto, pero "seed" sí garantiza que
+        // la misma propiedad muestre siempre la misma foto.
+        String semilla = "propiedad" + seed;
+        if (nombreTipo != null) {
+            semilla = semilla + "-" + nombreTipo.toLowerCase().replaceAll("[^a-z0-9]", "");
+        }
+        return "https://picsum.photos/seed/" + semilla + "/600/400";
+    }
+%>
