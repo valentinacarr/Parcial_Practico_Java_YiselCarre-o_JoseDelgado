@@ -5,188 +5,212 @@
 <%@ include file="/WEB-INF/jspf/imagenes.jspf" %>
 
 <%
-    String idStr = request.getParameter("id");
-    int idPropiedad = 0;
-    if (idStr != null && !idStr.trim().isEmpty()) {
-        try {
-            idPropiedad = Integer.parseInt(idStr);
-        } catch (NumberFormatException e) {
-            idPropiedad = 0;
-        }
+    // Verificación de sesión de administrador
+    Integer idUsuario = (Integer) session.getAttribute("id_usuario");
+    if (idUsuario == null) {
+        response.sendRedirect("../login.jsp?redirect=admin/admin_propiedades.jsp");
+        return;
+    }
+    String rolSesionAdmin = (String) session.getAttribute("rol");
+    if (!("ADMINISTRADOR".equalsIgnoreCase(rolSesionAdmin) || "ADMIN".equalsIgnoreCase(rolSesionAdmin))) {
+        response.sendRedirect("../acceso_denegado.jsp");
+        return;
     }
 
     Connection conn = obtenerConexion();
-    PreparedStatement stmtProp = null;
-    ResultSet rsProp = null;
-    PreparedStatement stmtFotos = null;
-    ResultSet rsFotos = null;
+    String mensajeExito = request.getParameter("exito");
+    String mensajeError = null;
 
-    boolean existePropiedad = false;
+    // Procesar acción de cambio de estado (activar/desactivar).
+    // A diferencia de inmobiliaria/propiedades.jsp, el admin puede tocar CUALQUIER propiedad,
+    // sin filtrar por id_inmobiliaria.
+    String accion = request.getParameter("accion");
+    String idAccionStr = request.getParameter("id");
 
-    if (conn != null && idPropiedad > 0) {
-        String sqlProp = "SELECT p.*, c.nombre_ciudad, c.departamento, t.nombre_tipo, i.nombre_comercial, i.telefono_contacto " +
-                         "FROM propiedad p " +
-                         "INNER JOIN ciudad c ON p.id_ciudad = c.id_ciudad " +
-                         "INNER JOIN tipo_propiedad t ON p.id_tipo = t.id_tipo " +
-                         "INNER JOIN inmobiliaria i ON p.id_inmobiliaria = i.id_inmobiliaria " +
-                         "WHERE p.id_propiedad = ? AND p.activo = TRUE";
-        stmtProp = conn.prepareStatement(sqlProp);
-        stmtProp.setInt(1, idPropiedad);
-        rsProp = stmtProp.executeQuery();
-
-        if (rsProp.next()) {
-            existePropiedad = true;
+    if (accion != null && idAccionStr != null && conn != null) {
+        PreparedStatement stmtAccion = null;
+        try {
+            int idAccion = Integer.parseInt(idAccionStr);
+            if ("eliminar".equals(accion)) {
+                stmtAccion = conn.prepareStatement("UPDATE propiedad SET activo = FALSE WHERE id_propiedad = ?");
+                stmtAccion.setInt(1, idAccion);
+                stmtAccion.executeUpdate();
+                mensajeExito = "Propiedad desactivada correctamente.";
+            } else if ("activar".equals(accion)) {
+                stmtAccion = conn.prepareStatement("UPDATE propiedad SET activo = TRUE WHERE id_propiedad = ?");
+                stmtAccion.setInt(1, idAccion);
+                stmtAccion.executeUpdate();
+                mensajeExito = "Propiedad reactivada correctamente.";
+            }
+        } catch (SQLException e) {
+            mensajeError = "Error al procesar la acción: " + e.getMessage();
+        } catch (NumberFormatException nfe) {
+            mensajeError = "ID de propiedad inválido.";
+        } finally {
+            if (stmtAccion != null) try { stmtAccion.close(); } catch (Exception e) {}
         }
-
-        String sqlFotos = "SELECT * FROM imagen_propiedad WHERE id_propiedad = ? ORDER BY es_portada DESC, id_imagen ASC";
-        stmtFotos = conn.prepareStatement(sqlFotos);
-        stmtFotos.setInt(1, idPropiedad);
-        rsFotos = stmtFotos.executeQuery();
     }
 
-    // Características del inmueble (relación N:M propiedad <-> caracteristica vía propiedad_caracteristica)
-    PreparedStatement stmtCarac = null;
-    ResultSet rsCarac = null;
-    if (conn != null && existePropiedad) {
-        String sqlCarac = "SELECT c.nombre_caracteristica " +
-                           "FROM propiedad_caracteristica pc " +
-                           "INNER JOIN caracteristica c ON pc.id_caracteristica = c.id_caracteristica " +
-                           "WHERE pc.id_propiedad = ? " +
-                           "ORDER BY c.nombre_caracteristica";
-        stmtCarac = conn.prepareStatement(sqlCarac);
-        stmtCarac.setInt(1, idPropiedad);
-        rsCarac = stmtCarac.executeQuery();
+    // Consulta de TODAS las propiedades del sistema (todas las inmobiliarias)
+    PreparedStatement stmtProp = null;
+    ResultSet rsProp = null;
+    if (conn != null) {
+        try {
+            String sqlList = "SELECT p.id_propiedad, p.matricula_inmobiliaria, p.titulo, p.precio, p.area_m2, " +
+                             "p.habitaciones, p.banos, p.estado, p.activo, " +
+                             "c.nombre_ciudad, t.nombre_tipo, i.nombre_comercial, " +
+                             "(SELECT ip.url_imagen FROM imagen_propiedad ip " +
+                             "  WHERE ip.id_propiedad = p.id_propiedad " +
+                             "  ORDER BY ip.es_portada DESC, ip.id_imagen ASC LIMIT 1) AS foto_portada " +
+                             "FROM propiedad p " +
+                             "INNER JOIN ciudad c ON p.id_ciudad = c.id_ciudad " +
+                             "INNER JOIN tipo_propiedad t ON p.id_tipo = t.id_tipo " +
+                             "INNER JOIN inmobiliaria i ON p.id_inmobiliaria = i.id_inmobiliaria " +
+                             "ORDER BY p.id_propiedad DESC";
+            stmtProp = conn.prepareStatement(sqlList);
+            rsProp = stmtProp.executeQuery();
+        } catch (SQLException e) {
+            mensajeError = "Error al listar propiedades: " + e.getMessage();
+        }
     }
 %>
 
-<div class="container my-4">
-    <% if (!existePropiedad) { %>
-        <div class="alert alert-warning text-center my-5 shadow-sm" role="alert">
-            <h4 class="alert-heading">¡Propiedad no encontrada!</h4>
-            <p>El inmueble especificado no existe o ha sido desactivado.</p>
-            <hr>
-            <a href="index.jsp" class="btn btn-primary">Volver al catálogo</a>
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold m-0">Administrar Propiedades</h2>
+            <p class="text-muted m-0">Todos los inmuebles registrados en el sistema</p>
         </div>
-    <% } else { %>
-        <a href="index.jsp" class="btn btn-outline-secondary mb-3">&larr; Volver a las propiedades</a>
+        <div>
+            <a href="index.jsp" class="btn btn-outline-secondary me-2">&larr; Volver al Panel</a>
+            <a href="formulario_propiedad.jsp" class="btn btn-success fw-bold">+ Nueva Propiedad</a>
+        </div>
+    </div>
 
-        <div class="row">
-            <!-- Columna Izquierda: Galería e Información General -->
-            <div class="col-md-8">
-                <h2><%= rsProp.getString("titulo") %></h2>
-                <p class="text-muted mb-3">
-                    <i class="bi bi-geo-alt"></i> <%= rsProp.getString("nombre_ciudad") %>, <%= rsProp.getString("departamento") %>
-                    <span class="ms-3 badge bg-outline-dark border text-dark">Matrícula: <%= rsProp.getString("matricula_inmobiliaria") %></span>
-                </p>
-                
-                <!-- Carrusel de fotos -->
-                <div id="carouselPropiedad" class="carousel slide mb-4 shadow rounded overflow-hidden bg-light" data-bs-ride="carousel">
-                    <div class="carousel-inner">
-                        <% 
-                            boolean primeraFoto = true;
-                            if (rsFotos != null && rsFotos.isBeforeFirst()) {
-                                while (rsFotos.next()) {
-                        %>
-                                    <div class="carousel-item <%= primeraFoto ? "active" : "" %>">
-                                        <img src="<%= rsFotos.getString("url_imagen") %>" class="d-block w-100" alt="Foto Inmueble" style="max-height: 480px; object-fit: cover;">
-                                    </div>
-                        <% 
-                                    primeraFoto = false;
-                                }
-                            } else {
-                        %>
-                                <div class="carousel-item active">
-                                    <img src="<%= imagenPorTipo(rsProp.getString("nombre_tipo"), idPropiedad) %>" class="d-block w-100" alt="<%= rsProp.getString("titulo") %>" style="max-height: 480px; object-fit: cover;">
-                                </div>
-                        <% } %>
-                    </div>
-                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselPropiedad" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Anterior</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#carouselPropiedad" data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Siguiente</span>
-                    </button>
-                </div>
+    <% if (mensajeExito != null) { %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <%= mensajeExito %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <% } %>
 
-                <!-- Descripción detallada -->
-                <div class="card shadow-sm mb-4">
-                    <div class="card-body">
-                        <h4 class="card-title mb-3">Descripción de la Propiedad</h4>
-                        <p class="card-text text-secondary" style="white-space: pre-line;"><%= rsProp.getString("descripcion") != null ? rsProp.getString("descripcion") : "Sin descripción disponible." %></p>
-                    </div>
-                </div>
-            </div>
+    <% if (mensajeError != null) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <%= mensajeError %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <% } %>
 
-            <!-- Columna Derecha: Tarjeta de Precio, Características e Inmobiliaria -->
-            <div class="col-md-4">
-                <div class="card shadow-sm sticky-top" style="top: 20px;">
-                    <div class="card-body">
-                        <span class="badge bg-info text-dark mb-2"><%= rsProp.getString("nombre_tipo") %></span>
-                        <span class="badge bg-success mb-2"><%= rsProp.getString("estado") %></span>
-                        <h3 class="text-primary fw-bold my-2">$<%= String.format("%,.0f", rsProp.getDouble("precio")) %></h3>
-                        
-                        <hr>
-
-                        <h5 class="fw-bold mb-3">Características</h5>
-                        <ul class="list-group list-group-flush mb-4">
-                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                Área <span><%= rsProp.getDouble("area_m2") %> m²</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                Habitaciones <span><%= rsProp.getInt("habitaciones") %></span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                Baños <span><%= rsProp.getInt("banos") %></span>
-                            </li>
-                        </ul>
-
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Foto</th>
+                            <th># ID</th>
+                            <th>Matrícula</th>
+                            <th>Título</th>
+                            <th>Tipo</th>
+                            <th>Ciudad</th>
+                            <th>Inmobiliaria</th>
+                            <th>Estado</th>
+                            <th>Precio ($ COP)</th>
+                            <th>Visibilidad</th>
+                            <th class="text-end px-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                         <%
-                            boolean hayCaracteristicas = false;
-                            if (rsCarac != null) {
-                                while (rsCarac.next()) {
-                                    if (!hayCaracteristicas) { %>
-                                        <div class="mb-4">
-                                            <h6 class="fw-bold">Comodidades</h6>
-                        <% 
+                            boolean hayPropiedades = false;
+                            if (rsProp != null) {
+                                while (rsProp.next()) {
+                                    hayPropiedades = true;
+                                    int idP = rsProp.getInt("id_propiedad");
+                                    boolean estaActivo = rsProp.getBoolean("activo");
+                                    String est = rsProp.getString("estado");
+                                    String foto = rsProp.getString("foto_portada");
+                                    if (foto == null || foto.trim().isEmpty()) {
+                                        foto = imagenPorTipo(rsProp.getString("nombre_tipo"), idP);
                                     }
-                                    hayCaracteristicas = true;
                         %>
-                                    <span class="badge bg-secondary me-1 mb-1"><%= rsCarac.getString("nombre_caracteristica") %></span>
+                        <tr class="<%= !estaActivo ? "table-secondary text-muted" : "" %>">
+                            <td>
+                                <img src="<%= foto %>" alt="Foto propiedad"
+                                     style="width:64px; height:48px; object-fit:cover; border-radius:6px;">
+                            </td>
+                            <td class="fw-bold">#<%= idP %></td>
+                            <td><small class="text-muted"><%= rsProp.getString("matricula_inmobiliaria") %></small></td>
+                            <td class="fw-semibold"><%= rsProp.getString("titulo") %></td>
+                            <td><span class="badge bg-secondary"><%= rsProp.getString("nombre_tipo") %></span></td>
+                            <td><%= rsProp.getString("nombre_ciudad") %></td>
+                            <td><small><%= rsProp.getString("nombre_comercial") %></small></td>
+                            <td>
+                                <% if ("DISPONIBLE".equals(est)) { %>
+                                    <span class="badge bg-success">Disponible</span>
+                                <% } else if ("RESERVADA".equals(est)) { %>
+                                    <span class="badge bg-warning text-dark">Reservada</span>
+                                <% } else if ("VENDIDA".equals(est)) { %>
+                                    <span class="badge bg-danger">Vendida</span>
+                                <% } else if ("ARRENDADA".equals(est)) { %>
+                                    <span class="badge bg-info text-dark">Arrendada</span>
+                                <% } else { %>
+                                    <span class="badge bg-dark">Inactiva</span>
+                                <% } %>
+                            </td>
+                            <td class="text-success fw-bold">$<%= String.format("%,.2f", rsProp.getDouble("precio")) %></td>
+                            <td>
+                                <% if (estaActivo) { %>
+                                    <span class="badge bg-success-subtle text-success border border-success">Activa</span>
+                                <% } else { %>
+                                    <span class="badge bg-danger-subtle text-danger border border-danger">Desactivada</span>
+                                <% } %>
+                            </td>
+                            <td class="text-end px-4">
+                                <a href="../detalle_propiedad.jsp?id=<%= idP %>" class="btn btn-sm btn-outline-secondary me-1" title="Ver">
+                                    Ver
+                                </a>
+                                <a href="formulario_propiedad.jsp?id=<%= idP %>" class="btn btn-sm btn-outline-primary me-1" title="Editar">
+                                    Editar
+                                </a>
+                                <% if (estaActivo) { %>
+                                    <a href="admin_propiedades.jsp?accion=eliminar&id=<%= idP %>"
+                                       class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('¿Deseas desactivar esta propiedad?');"
+                                       title="Desactivar">
+                                        Desactivar
+                                    </a>
+                                <% } else { %>
+                                    <a href="admin_propiedades.jsp?accion=activar&id=<%= idP %>"
+                                       class="btn btn-sm btn-outline-success"
+                                       title="Activar">
+                                        Activar
+                                    </a>
+                                <% } %>
+                            </td>
+                        </tr>
                         <%
                                 }
-                                if (hayCaracteristicas) { %>
-                                    </div>
-                        <% }
                             }
+                            if (!hayPropiedades) {
                         %>
-
-                        <div class="alert alert-light border">
-                            <small class="text-muted d-block">Publicado por:</small>
-                            <strong><%= rsProp.getString("nombre_comercial") %></strong><br>
-                            <small>Tel: <%= rsProp.getString("telefono_contacto") != null ? rsProp.getString("telefono_contacto") : "No disponible" %></small>
-                        </div>
-
-                        <div class="d-grid gap-2">
-                            <a href="contactar.jsp?id=<%= idPropiedad %>" class="btn btn-success btn-lg">Agendar Cita / Contactar</a>
-                        </div>
-                    </div>
-                </div>
+                        <tr>
+                            <td colspan="11" class="text-center py-4 text-muted">
+                                No hay propiedades registradas todavía.
+                            </td>
+                        </tr>
+                        <% } %>
+                    </tbody>
+                </table>
             </div>
         </div>
-    <% 
-        }
-
-        // Cierre de conexiones
-        if (rsCarac != null) try { rsCarac.close(); } catch (Exception e) {}
-        if (stmtCarac != null) try { stmtCarac.close(); } catch (Exception e) {}
-        if (rsFotos != null) try { rsFotos.close(); } catch (Exception e) {}
-        if (stmtFotos != null) try { stmtFotos.close(); } catch (Exception e) {}
-        if (rsProp != null) try { rsProp.close(); } catch (Exception e) {}
-        if (stmtProp != null) try { stmtProp.close(); } catch (Exception e) {}
-        if (conn != null) try { conn.close(); } catch (Exception e) {}
-    %>
+    </div>
 </div>
+
+<%
+    if (rsProp != null) try { rsProp.close(); } catch (Exception e) {}
+    if (stmtProp != null) try { stmtProp.close(); } catch (Exception e) {}
+    if (conn != null) try { conn.close(); } catch (Exception e) {}
+%>
 
 <%@ include file="/WEB-INF/jspf/footer.jspf" %>
