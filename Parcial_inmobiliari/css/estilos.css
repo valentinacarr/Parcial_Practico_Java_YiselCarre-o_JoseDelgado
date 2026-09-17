@@ -1,23 +1,16 @@
-/* =========================================================
-   NEXO INMOBILIARIA — Sistema de diseño
-   Paleta: azul noche + oro sobre fondo claro, a juego con el
-   logo. Tipografía: Space Grotesk (titulares) + Inter (texto).
-   Animaciones en cada rincón.
-   ========================================================= */
-
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
     /* Paleta */
-    --ink:            #0F1B2E;   /* texto principal / azul noche del logo */
-    --navy:           #16213E;   /* azul noche -- color de marca */
+    --ink:            #0F1B2E;   
+    --navy:           #16213E;   
     --navy-dark:      #0A1120;
     --navy-light:     #2A3A5C;
-    --gold:           #C9A24E;   /* oro cálido -- acento de marca */
+    --gold:           #C9A24E;   
     --gold-light:     #E8C878;
     --gold-dark:      #A6812F;
-    --teal:           #2DD4BF;   /* acento vivo para detalles/foco */
-    --paper:          #F6F4EE;   /* fondo general, crema suave */
+    --teal:           #2DD4BF;   
+    --paper:          #F6F4EE;   
     --paper-card:     #FFFFFF;
     --stone:          #6B7280;
     --line:           #E7E2D3;
